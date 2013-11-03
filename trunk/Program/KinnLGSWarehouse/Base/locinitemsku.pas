@@ -1,0 +1,660 @@
+unit locinitemsku;
+
+interface
+
+uses
+   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+   DB, DBTables, Grids, DBGrids, StdCtrls, Mask, DBCtrls, Buttons, ExtCtrls,
+   libproc, libuser, GMSLabel, Menus, DBClient, DragBar, dxTL, dxDBGrid,
+   dxCntner, dxDBCtrl, dxEditor, dxExEdtr, dxEdLib, KBitBtn,
+   KGroupBox, KUpdateSql, ComCtrls, IdBaseComponent, IdComponent,
+   IdTCPConnection, IdTCPClient, IdFTP, ADODB, KDataSetProvider, dxDBTLCl,
+   dxGrClms, KinPickEdit, dxDBELib, dxPageControl;
+
+type
+  Tfrmlocinitemsku = class(TForm)
+    Panel1: TPanel;
+    Panel4: TPanel;
+    btnClose: TKBitBtn;
+    DragBar1: TDragBar;
+    Panel5: TPanel;
+    btnInPutOrder: TKBitBtn;
+    btnOK: TKBitBtn;
+    GMSStickyLabel2: TGMSStickyLabel;
+    edtPath: TdxButtonEdit;
+    OpenDialog1: TOpenDialog;
+    KGroupBox2: TKGroupBox;
+    SaveDialog1: TSaveDialog;
+    qryOrder: TKADOQuery;
+    dtsOrder: TDataSource;
+    qrySku: TKADOQuery;
+    dtsSku: TDataSource;
+    qryTmp: TKADOQuery;
+    qryTmp1: TKADOQuery;
+    ppmorder: TPopupMenu;
+    mitDelOrder: TMenuItem;
+    cmbTemple: TKinPickEdit;
+    GMSStickyLabel30: TGMSStickyLabel;
+    qryTmp2: TKADOQuery;
+    pgcWareOther: TdxPageControl;
+    tbsSku: TdxTabSheet;
+    tbsInfo: TdxTabSheet;
+    grdSku: TdxDBGrid;
+    sno: TdxDBGridColumn;
+    corpno: TdxDBGridColumn;
+    lotcode: TdxDBGridButtonColumn;
+    piece: TdxDBGridCurrencyColumn;
+    skumodel: TdxDBGridColumn;
+    skuname: TdxDBGridButtonColumn;
+    quantity: TdxDBGridCurrencyColumn;
+    skuspec: TdxDBGridColumn;
+    netweight: TdxDBGridCurrencyColumn;
+    grossweight: TdxDBGridCurrencyColumn;
+    volume: TdxDBGridCurrencyColumn;
+    depth: TdxDBGridColumn;
+    width: TdxDBGridColumn;
+    height: TdxDBGridColumn;
+    mainorder: TdxDBGridColumn;
+    cusbillno: TdxDBGridColumn;
+    shippercusname: TdxDBGridButtonColumn;
+    cusname: TdxDBGridColumn;
+    quantityuom: TdxDBGridPickColumn;
+    pieceuom: TdxDBGridPickColumn;
+    area: TdxDBGridCurrencyColumn;
+    areauom: TdxDBGridPickColumn;
+    volumeuom: TdxDBGridPickColumn;
+    weightuom: TdxDBGridPickColumn;
+    remark: TdxDBGridColumn;
+    cubcage: TdxDBGridColumn;
+    price: TdxDBGridColumn;
+    skucost: TdxDBGridColumn;
+    qualityname: TdxDBGridColumn;
+    customerno: TdxDBGridColumn;
+    locname: TdxDBGridColumn;
+    memSkuname: TdxMemo;
+    memcustomerno: TdxMemo;
+    memskumodel: TdxMemo;
+    memskuspec: TdxMemo;
+    KGroupBox4: TKGroupBox;
+    GMSStickyLabel16: TGMSStickyLabel;
+    GMSStickyLabel10: TGMSStickyLabel;
+    GMSStickyLabel13: TGMSStickyLabel;
+    GMSStickyLabel17: TGMSStickyLabel;
+    serialno: TdxDBGridColumn;
+    casing1: TdxDBGridColumn;
+    procedure btnCloseClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word;
+       Shift: TShiftState);
+    procedure btnInPutOrderClick(Sender: TObject);
+    procedure btnOKClick(Sender: TObject);
+    procedure edtPathButtonClick(Sender: TObject; AbsoluteIndex: Integer);
+    procedure mitDelOrderClick(Sender: TObject);
+  Private
+    { Private declarations }
+    strSql,strInOut: string;
+    strlocinjobno:string;
+    BytesToTransfer: LongWord;
+    strStartarea : string ;
+  Public
+    { Public declarations }
+  end;
+
+procedure worklocinitemsku(pstrjobno:string);
+var
+   frmlocinitemsku: Tfrmlocinitemsku;
+
+implementation
+
+{$R *.DFM}
+
+uses inifiles,libbb,datas,kindlg, main,libuserPub,GetDllPub,datasTmp;
+var
+   AverageSpeed: Double = 0;
+
+procedure worklocinitemsku(pstrjobno:string);
+begin
+   if (frmlocinitemsku <> nil) and frmlocinitemsku.HandleAllocated then
+   with frmlocinitemsku do
+   begin
+      if WindowState = wsMinimized then WindowState := wsNormal;
+      Show;
+      Exit;
+   end;
+   Application.CreateForm(Tfrmlocinitemsku, frmlocinitemsku);
+   with frmlocinitemsku do
+   begin
+      //edtIuserId.Text:=_Username;
+      //edtIuserId.TextField:=_Userid;
+      //dtdReceDateT.Date:=Date;
+      //lzw20100914
+      tbsInfo.TabVisible:=false;
+      if _StrSysCus='DHA' then
+      begin
+         cmbTemple.TextField:='10';
+         cmbTemple.Text:='进仓任务导入';
+
+         skucost.Visible:=True;
+         price.Visible:=True;
+         corpno.Visible:=False;
+         volume.Visible:=False;
+         depth.Visible:=False;
+         width.Visible:=False;
+         height.Visible:=False;
+         area.Visible:=False;
+         areauom.Visible:=False;
+         volumeuom.Visible:=False;
+         remark.Visible:=False;
+         cubcage.Visible:=False;
+         mainorder.Visible:=False;
+         cusbillno.Visible:=False;
+         cusname.Visible:=False;
+         shippercusname.Visible:=False;
+         netweight.Visible:=False;
+         grossweight.Visible:=False;
+         weightuom.Visible:=False;
+         lotcode.Visible:=False;
+         cmbTemple.Enabled:=False;
+      end;
+      if _StrSysCus='JG' then
+      begin
+         cmbTemple.TextField:='4';
+         cmbTemple.Text:='指令导入模板';
+         cmbTemple.Enabled:=False;
+      end;
+      cmbTemple.Items.Clear;
+      cmbTemple.ItemFields.Clear;
+      OpenSql(qryTmp1,' select * from  formatin (nolock)  ');
+      qryTmp1.First;
+      while not qryTmp1.Eof do
+      begin
+         cmbTemple.Items.Add(qryTmp1.FieldByName('fsname').AsString);
+         cmbTemple.ItemFields.Add(qryTmp1.FieldByName('fsid').AsString);
+         qryTmp1.Next;
+      end;
+      if (_StrSysCus<>'DHA') AND (_StrSysCus<>'JG') then
+      begin
+         cmbTemple.ItemIndex:=0;
+      end;  
+
+
+      qryTmp1.Close;
+      strlocinjobno:=pstrjobno;
+   end;
+   frmlocinitemsku.Show;
+end;
+
+procedure Tfrmlocinitemsku.btnCloseClick(Sender: TObject);
+begin
+   frmlocinitemsku.close;
+end;
+
+procedure Tfrmlocinitemsku.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+   Action := caFree;
+end;
+
+procedure Tfrmlocinitemsku.FormCreate(Sender: TObject);
+begin
+   SetFormPosition(Self,True);
+   SetFormStyle(Self);
+   SetGroupbox(KGroupBox2);
+   SetDxDbGrid(grdSku);
+   qryTmp.Connection:=_ADOConnection;
+   qryOrder.Connection:=_ADOConnection;
+   qrySku.Connection:=_ADOConnection;
+   qryTmp1.Connection:=_ADOConnection;
+   qryTmp2.Connection:=_ADOConnection;
+end;
+
+procedure Tfrmlocinitemsku.FormDestroy(Sender: TObject);
+begin
+   frmlocinitemsku:=nil;
+end;
+
+procedure Tfrmlocinitemsku.FormKeyDown(Sender: TObject; var Key: Word;
+   Shift: TShiftState);
+begin
+   if (Key = Vk_Return) then
+      ReturnNext(self);
+end;
+
+procedure Tfrmlocinitemsku.btnInPutOrderClick(Sender: TObject);
+var
+   lstcubage:TStringList;
+   strsql,strskuname,strlocname:string;
+   strshippercusname,strcusname:string;
+   strcustomerno,strskuspec,strskumodel:string;
+begin
+
+   ExecSql(qryTmp,'    if exists(select * from tempdb..sysobjects            '+chr(13)+chr(10)
+                 +' where id=object_id("tempdb..#locinitemSku") and sysstat & 0xf=3)  '+chr(13)+chr(10)
+                 +'  drop table #locinitemSku                                         '+chr(13)+chr(10)
+                 +'select sno,jobno,userid,username,iuserid,iusername,   '+chr(13)+chr(10)
+                 +'       pieceuom,weightuom,volumeuom,areauom,quantityuom, '+chr(13)+chr(10)
+                 +'       piece,grossweight,netweight,volume,area,quantity,casing1, '+chr(13)+chr(10)
+                 +'       skuid,skuname,qualityname,shippercusid,shippercusname,mainorder,'+chr(13)+chr(10)
+                 +'       cusbillno,cusid,cusname,costcusid,costcusname,remark,customerno, '+chr(13)+chr(10)
+                 //lzw20100914
+                 +'       price,skucost,locationbillno,locname,locid,cubcage=convert(varchar(50),""),      '+chr(13)+chr(10)
+                 +'       depth,height,width,lotcode,corpno,skumodel,skuspec,serialno        '+chr(13)+chr(10)
+                 +'  into #locinitemSku '+chr(13)+chr(10)
+                 +'  from locationinitem (nolock)'+chr(13)+chr(10)
+                 +' where 1=2              '+chr(13)+chr(10)
+          );
+
+  strSql:='select sno,jobno,userid, '+chr(13)+chr(10)
+         +'       username,iuserid,iusername,pieceuom,weightuom,volumeuom,areauom, '+chr(13)+chr(10)
+         +'       quantityuom,piece,grossweight,netweight,volume,area,quantity,casing1, '+chr(13)+chr(10)
+         +'       skuid,skuname,qualityname,shippercusid,shippercusname,mainorder,'+chr(13)+chr(10)
+         +'       cusbillno,cusid,cusname,costcusid,costcusname,remark, customerno,    '+chr(13)+chr(10)
+         //lzw20100914
+         +'       price,skucost,locationbillno,locname,locid, cubcage,            '+chr(13)+chr(10)
+         +'      depth,height,width,lotcode,corpno,skumodel,skuspec,serialno      '+chr(13)+chr(10)
+         +'  from #locinitemSku   (nolock)                                        '+chr(13)+chr(10)
+         +' where 1=1                                                             '+chr(13)+chr(10)
+         ;
+   qrySku.close;
+   qrySku.SQL.Clear;
+   qrySku.SQL.Add(strSql);
+   qrySku.Open;
+   if edtPath.Text='' then
+   begin
+      edtPath.setFocus;
+      Kmessagedlg('请先选需要读入的文件路径！', mtInformation,[mbOk],0);
+      exit;
+   end;
+   //清除旧数据
+   ExecSql(qryTmp,'delete from #locinitemSku ');
+   try
+     FileTOGrid(qrySku,grdSku,edtPath.Text,cmbTemple.TextField);
+   except
+      exit;
+   end;
+
+   OpenSql(qryTmp2,'select costcusid=locationin.costcusid,costcusname=locationin.costcusname,'+chr(13)+chr(10)
+                  +'       shippercusname=locationin.costcusname,locationbillno, '+chr(13)+chr(10)
+                  +'       cusid=locationin.costcusid,cusname=locationin.costcusname,'+chr(13)+chr(10)
+                  +'       cusbillno=locationin.cusbillno,mainorder=locationin.mainorder,  '+chr(13)+chr(10)
+                  +'       iuserid=locationin.iuserid, iusername=locationin.iusername,userid,username '+chr(13)+chr(10)
+                  +'  from locationin (nolock)'+chr(13)+chr(10)
+                  +' where locationin.jobno="'+strlocinjobno+'"  '+chr(13)+chr(10)
+                   );
+
+   //OpenSql(qryTmp,'select * from #lskformatin where 1=1');
+
+   if _StrSysCus='DHA' then
+   begin
+      //lzw20100919
+      OpenSql(dataTmp.qryTmp2,'select skuname,skuspec,skumodel from  #lskformatin                              '+chr(13)+chr(10)
+                             +' where not exists(select 1 from sku(nolock)                                     '+chr(13)+chr(10)
+                             +'                   where sku.skuname=#lskformatin.skuname                       '+chr(13)+chr(10)
+                             +'                     and isnull(sku.skuspec,"")=isnull(#lskformatin.skuspec,"") '+chr(13)+chr(10)
+                             +'                     and isnull(sku.skumodel,"")=isnull(#lskformatin.skumodel,"") '+chr(13)+chr(10)
+                             +'                     and isnull(isdetail,"F")="T" )                              '+chr(13)+chr(10)
+                 );
+      strskuname:='';
+      datatmp.qryTmp2.First;
+      while not datatmp.qryTmp2.Eof do
+      begin
+         strskuname:=strskuname+'/'+dataTmp.qryTmp2.fieldbyname('skuname').AsString+' '+dataTmp.qryTmp2.fieldbyname('skuspec').AsString+' '+dataTmp.qryTmp2.fieldbyname('skumodel').AsString;
+         datatmp.qryTmp2.Next;
+      end;
+      if strskuname<>'' then
+      begin
+         Kmessagedlg('"'+strskuname+'"不存在,不允许导入！', mtInformation,[mbOk],0);
+         Exit;
+      end;
+
+      execsql(qryTmp,'insert #locinitemSku  '+chr(13)+chr(10)
+                 +'select sno=0,'
+                 +'       jobno="'+strlocinjobno+'",'
+                 +'       userid="'+qryTmp2.fieldbyname('userid').AsString+'",'+chr(13)+chr(10)
+                 +'       username="'+qryTmp2.fieldbyname('username').AsString+'",   '+chr(13)+chr(10)
+                 +'       iuserid="'+qryTmp2.fieldbyname('iuserid').AsString+'",   '+chr(13)+chr(10)
+                 +'       iusername="'+qryTmp2.fieldbyname('iusername').AsString+'",   '+chr(13)+chr(10)
+                 +'       pieceuom=isnull(sku.pieceuom,""),weightuom="",volumeuom="",areauom="",'+chr(13)+chr(10)
+                 +'       sku.quantityuom,#lskformatin.piece,grossweight=0,                '+chr(13)+chr(10)
+                 +'       netweight=0,volume=0,area=0,#lskformatin.quantity,               '+chr(13)+chr(10)
+                 +'       skuid=sku.skuid,#lskformatin.skuname,qualityname="正品",         '+chr(13)+chr(10)
+                 +'       shippercusid="'+qryTmp2.fieldbyname('costcusid').AsString+'",    '+chr(13)+chr(10)
+                 +'       shippercusname="'+qryTmp2.fieldbyname('costcusname').AsString+'",'+chr(13)+chr(10)
+                 +'       mainorder="'+qryTmp2.fieldbyname('mainorder').AsString+'",       '+chr(13)+chr(10)
+                 +'       cusbillno="'+qryTmp2.fieldbyname('cusbillno').AsString+'",       '+chr(13)+chr(10)
+                 +'       cusid="'+qryTmp2.fieldbyname('costcusid').AsString+'",           '+chr(13)+chr(10)
+                 +'       cusname="'+qryTmp2.fieldbyname('costcusname').AsString+'",       '+chr(13)+chr(10)
+                 +'       costcusid="'+qryTmp2.fieldbyname('costcusid').AsString+'",       '+chr(13)+chr(10)
+                 +'       costcusname="'+qryTmp2.fieldbyname('costcusname').AsString+'" ,  '+chr(13)+chr(10)
+                 //lzw20100914
+                 +'       remark="",customerno=NULL,#lskformatin.price,#lskformatin.skucost,   '+chr(13)+chr(10)
+                 +'       locationbillno="'+qryTmp2.fieldbyname('locationbillno').AsString+'",'+chr(13)+chr(10)
+                 +'       locname=null,locid=null,cubcage="",                              '+chr(13)+chr(10)
+                 +'       depth=0,height=0,width=0,lotcode="" , corpno="",                 '+chr(13)+chr(10)
+                 +'       #lskformatin.skumodel,#lskformatin.skuspec '+chr(13)+chr(10)
+                 +' from  #lskformatin    (nolock)                                         '+chr(13)+chr(10)
+                 +'       left join sku(nolock)                                            '+chr(13)+chr(10)
+                 +'              on sku.skuname=#lskformatin.skuname                       '+chr(13)+chr(10)
+                 +'             and isnull(sku.skuspec,"")=isnull(#lskformatin.skuspec,"") '+chr(13)+chr(10)
+                 +'             and isnull(sku.skumodel,"")=isnull(#lskformatin.skumodel,"") '+chr(13)+chr(10)
+                 +' where 1=1                                               '+chr(13)+chr(10)
+                 +'declare @i smallint                                      '+chr(13)+chr(10)
+                 +' if exists(select 1 from locationinitem(nolock) where jobno="'+strlocinjobno+'")'+chr(13)+chr(10)
+                 +' begin                                                   '+chr(13)+chr(10)
+                 +'    select @i=max(isnull(sno,0))+1 from locationinitem(nolock) where jobno="'+strlocinjobno+'"'+chr(13)+chr(10)
+                 +' end else                                                '+chr(13)+chr(10)
+                 +' begin                                                   '+chr(13)+chr(10)
+                 +' select @i=0                                             '+chr(13)+chr(10)
+                 +' end                                                     '+chr(13)+chr(10)
+                 +' update #locinitemSku                                    '+chr(13)+chr(10)
+                 +'    set sno=@i,@i=@i+1                                   '+chr(13)+chr(10)
+                 );
+   end else
+   if _StrSysCus='JG' then
+   begin
+      //lzw20100919
+      OpenSql(dataTmp.qryTmp2,'select distinct skuname,skuspec,skumodel,customerno from  #lskformatin                              '+chr(13)+chr(10)
+                             +' where not exists(select 1 from sku(nolock)                                     '+chr(13)+chr(10)
+                             +'                   where sku.skuname=#lskformatin.skuname                       '+chr(13)+chr(10)
+                             +'                     and isnull(sku.skuspec,"")=isnull(#lskformatin.skuspec,"") '+chr(13)+chr(10)
+                             +'                     and isnull(sku.skumodel,"")=isnull(#lskformatin.skumodel,"") '+chr(13)+chr(10)
+                             +'                     and isnull(sku.customerno,"")=isnull(#lskformatin.customerno,"") '+chr(13)+chr(10)
+                             +'                     and isnull(isdetail,"F")="T" )                              '+chr(13)+chr(10)
+                 );
+      strskuname:='';
+      strcustomerno:='';
+      strskuspec:='';
+      strskumodel:='';
+      datatmp.qryTmp2.First;
+      while not datatmp.qryTmp2.Eof do
+      begin
+         strskuname:=strskuname+dataTmp.qryTmp2.fieldbyname('skuname').AsString+chr(13)+chr(10);
+         strcustomerno:=strcustomerno+dataTmp.qryTmp2.fieldbyname('customerno').AsString+chr(13)+chr(10);
+         strskumodel:=strskumodel+dataTmp.qryTmp2.fieldbyname('skumodel').AsString+chr(13)+chr(10);
+         strskuspec:=strskuspec+dataTmp.qryTmp2.fieldbyname('skuspec').AsString+chr(13)+chr(10);
+         datatmp.qryTmp2.Next;
+      end;
+      if strskuname<>'' then
+      begin
+         tbsinfo.TabVisible:=true;
+         pgcWareOther.ActivePage:=tbsinfo;
+         memskuname.text:=strskuname;
+         memcustomerno.text:=strcustomerno;
+         memskumodel.text:=strskumodel;
+         memskuspec.text:=strskuspec;
+         Kmessagedlg('存在商品资料库未建档的商品,不允许导入！', mtInformation,[mbOk],0);
+         Exit;
+      end;
+      //货主
+      OpenSql(dataTmp.qryTmp2,'select shippercusname from  #lskformatin                              '+chr(13)+chr(10)
+                             +' where not exists(select 1 from customer(nolock)                                     '+chr(13)+chr(10)
+                             +'                   where customer.cusname=#lskformatin.shippercusname )         '+chr(13)+chr(10)
+                 );
+      strshippercusname:='';
+      datatmp.qryTmp2.First;
+      while not datatmp.qryTmp2.Eof do
+      begin
+         strshippercusname:=strshippercusname+'/'+dataTmp.qryTmp2.fieldbyname('shippercusname').AsString;
+         datatmp.qryTmp2.Next;
+      end;
+      if strshippercusname<>'' then
+      begin
+         Kmessagedlg('"'+strshippercusname+'"不存在,不允许导入！', mtInformation,[mbOk],0);
+         Exit;
+      end;
+      //寄仓单位
+      OpenSql(dataTmp.qryTmp2,'select cusname from  #lskformatin                              '+chr(13)+chr(10)
+                             +' where not exists(select 1 from customer(nolock)                                     '+chr(13)+chr(10)
+                             +'                   where customer.cusname=#lskformatin.cusname )         '+chr(13)+chr(10)
+                 );
+      strcusname:='';
+      datatmp.qryTmp2.First;
+      while not datatmp.qryTmp2.Eof do
+      begin
+         strcusname:=strcusname+'/'+dataTmp.qryTmp2.fieldbyname('cusname').AsString;
+         datatmp.qryTmp2.Next;
+      end;
+      if strcusname<>'' then
+      begin
+         Kmessagedlg('"'+strcusname+'"不存在,不允许导入！', mtInformation,[mbOk],0);
+         Exit;
+      end;
+      //lzw20100919
+      {OpenSql(dataTmp.qryTmp2,'select locname from  #lskformatin                              '+chr(13)+chr(10)
+                             +' where not exists(select 1 from location(nolock)                                     '+chr(13)+chr(10)
+                             +'                   where location.locname=#lskformatin.locname                       '+chr(13)+chr(10)
+                             +'                     and isnull(location.isdetail,"F")="T" )                              '+chr(13)+chr(10)
+                 );
+      strlocname:='';
+      datatmp.qryTmp2.First;
+      while not datatmp.qryTmp2.Eof do
+      begin
+         strlocname:=strlocname+'/'+dataTmp.qryTmp2.fieldbyname('locname').AsString;
+         datatmp.qryTmp2.Next;
+      end;
+      if strlocname<>'' then
+      begin
+         Kmessagedlg('"'+strlocname+'"不存在,不允许导入！', mtInformation,[mbOk],0);
+         Exit;
+      end;}
+
+
+      execsql(qryTmp,'insert #locinitemSku  '+chr(13)+chr(10)
+                 +'select sno=0,                                                                               '+chr(13)+chr(10)
+                 +'       jobno="'+strlocinjobno+'",                                                           '+chr(13)+chr(10)
+                 +'       userid="'+qryTmp2.fieldbyname('userid').AsString+'",                                 '+chr(13)+chr(10)
+                 +'       username="'+qryTmp2.fieldbyname('username').AsString+'",                             '+chr(13)+chr(10)
+                 +'       iuserid="'+qryTmp2.fieldbyname('iuserid').AsString+'",                               '+chr(13)+chr(10)
+                 +'       iusername="'+qryTmp2.fieldbyname('iusername').AsString+'",                           '+chr(13)+chr(10)
+                 +'       #lskformatin.pieceuom,#lskformatin.weightuom,volumeuom=sku.volumeuom,                 '+chr(13)+chr(10)
+                 +'       #lskformatin.areauom,#lskformatin.quantityuom,#lskformatin.piece,                    '+chr(13)+chr(10)
+                 +'       #lskformatin.grossweight,#lskformatin.netweight,                                        '+chr(13)+chr(10)
+                 +'       volume=(case when isnull(#lskformatin.volume,0)=0 then  (case when isnull(sku.piecepro,0)=0 then 0                                    '+chr(13)+chr(10)
+                 +'             else isnull(#lskformatin.quantity,0)/isnull(sku.piecepro,0)*(isnull(sku.volumepro,0)) end ) else #lskformatin.volume end),    '+chr(13)+chr(10)    //lihl 20120522
+                 +'       #lskformatin.area,#lskformatin.quantity,#lskformatin.casing1,                        '+chr(13)+chr(10)
+                 +'       skuid=sku.skuid,#lskformatin.skuname,qualityname="正品",                             '+chr(13)+chr(10)
+                 +'       shippercusid=shipper.cusid,                                                          '+chr(13)+chr(10)
+                 +'       shippercusid=#lskformatin.shippercusname,                                            '+chr(13)+chr(10)
+                 +'       mainorder="'+qryTmp2.fieldbyname('mainorder').AsString+'",                           '+chr(13)+chr(10)
+                 +'       cusbillno="'+qryTmp2.fieldbyname('cusbillno').AsString+'",                           '+chr(13)+chr(10)
+                 +'       cusid=cus.cusid,                                                                     '+chr(13)+chr(10)
+                 +'       cusname=#lskformatin.cusname,                                                        '+chr(13)+chr(10)
+                 +'       costcusid="'+qryTmp2.fieldbyname('costcusid').AsString+'",                           '+chr(13)+chr(10)
+                 +'       costcusname="'+qryTmp2.fieldbyname('costcusname').AsString+'" ,                      '+chr(13)+chr(10)
+                 //lzw20100914
+                 +'       remark="",customerno=#lskformatin.customerno,price=0,skucost=0,                      '+chr(13)+chr(10)
+                 +'       locationbillno="'+qryTmp2.fieldbyname('locationbillno').AsString+'",                 '+chr(13)+chr(10)
+                 +'       locname=#lskformatin.locname,locid=location.locid,cubcage="",                        '+chr(13)+chr(10)
+                 +'       depth=0,height=0,width=0,lotcode=#lskformatin.lotcode,corpno="",                     '+chr(13)+chr(10)
+                 +'       #lskformatin.skumodel,#lskformatin.skuspec,#lskformatin.serialno                     '+chr(13)+chr(10)
+                 +' from  #lskformatin    (nolock)                                                             '+chr(13)+chr(10)
+                 +'       left join sku(nolock)                                                                '+chr(13)+chr(10)
+                 +'              on sku.skuname=#lskformatin.skuname                                           '+chr(13)+chr(10)
+                 +'             and isnull(sku.skuspec,"")=isnull(#lskformatin.skuspec,"")                     '+chr(13)+chr(10)
+                 +'             and isnull(sku.skumodel,"")=isnull(#lskformatin.skumodel,"")                   '+chr(13)+chr(10)
+                 +'       left join location(nolock)                                                           '+chr(13)+chr(10)
+                 +'              on location.locname=#lskformatin.locname                                      '+chr(13)+chr(10)
+                 +'             and isnull(location.isdetail,"") ="T"                                          '+chr(13)+chr(10)
+                 +'       left join customer shipper(nolock)                                                   '+chr(13)+chr(10)
+                 +'              on shipper.cusname=#lskformatin.shippercusname                                '+chr(13)+chr(10)
+                 +'       left join customer cus(nolock)                                                       '+chr(13)+chr(10)
+                 +'              on cus.cusname=#lskformatin.cusname                                           '+chr(13)+chr(10)
+
+                 +' where 1=1                                               '+chr(13)+chr(10)
+                 +'declare @i smallint                                      '+chr(13)+chr(10)
+                 +' if exists(select 1 from locationinitem(nolock) where jobno="'+strlocinjobno+'")'+chr(13)+chr(10)
+                 +' begin                                                   '+chr(13)+chr(10)
+                 +'    select @i=max(isnull(sno,0))+1 from locationinitem(nolock) where jobno="'+strlocinjobno+'"'+chr(13)+chr(10)
+                 +' end else                                                '+chr(13)+chr(10)
+                 +' begin                                                   '+chr(13)+chr(10)
+                 +' select @i=0                                             '+chr(13)+chr(10)
+                 +' end                                                     '+chr(13)+chr(10)
+                 +' update #locinitemSku                                    '+chr(13)+chr(10)
+                 +'    set sno=@i,@i=@i+1                                   '+chr(13)+chr(10)
+                 );
+   end else
+   begin
+      execsql(qryTmp,'insert #locinitemSku  '+chr(13)+chr(10)
+                 +'select sno=0,'
+                 +'       jobno="'+strlocinjobno+'",'
+                 +'       userid="'+qryTmp2.fieldbyname('userid').AsString+'",'+chr(13)+chr(10)
+                 +'       username="'+qryTmp2.fieldbyname('username').AsString+'",   '+chr(13)+chr(10)
+                 +'       iuserid="'+qryTmp2.fieldbyname('iuserid').AsString+'",   '+chr(13)+chr(10)
+                 +'       iusername="'+qryTmp2.fieldbyname('iusername').AsString+'",   '+chr(13)+chr(10)
+                 +'       #lskformatin.pieceuom,#lskformatin.weightuom,#lskformatin.volumeuom,#lskformatin.areauom,'+chr(13)+chr(10)
+                 +'       #lskformatin.quantityuom,#lskformatin.piece,#lskformatin.grossweight,                '+chr(13)+chr(10)
+                 +'       #lskformatin.netweight,#lskformatin.volume,#lskformatin.area,#lskformatin.quantity, '+chr(13)+chr(10)
+                 +'       skuid=sku.skuid,#lskformatin.skuname,qualityname="正品",         '+chr(13)+chr(10)
+                 +'       shippercusid="'+qryTmp2.fieldbyname('costcusid').AsString+'",    '+chr(13)+chr(10)
+                 +'       shippercusname="'+qryTmp2.fieldbyname('costcusname').AsString+'",'+chr(13)+chr(10)
+                 +'       mainorder="'+qryTmp2.fieldbyname('mainorder').AsString+'",       '+chr(13)+chr(10)
+                 +'       cusbillno="'+qryTmp2.fieldbyname('cusbillno').AsString+'",       '+chr(13)+chr(10)
+                 +'       cusid="'+qryTmp2.fieldbyname('costcusid').AsString+'",           '+chr(13)+chr(10)
+                 +'       cusname="'+qryTmp2.fieldbyname('costcusname').AsString+'",       '+chr(13)+chr(10)
+                 +'       costcusid="'+qryTmp2.fieldbyname('costcusid').AsString+'",       '+chr(13)+chr(10)
+                 +'       costcusname="'+qryTmp2.fieldbyname('costcusname').AsString+'" ,  '+chr(13)+chr(10)
+                 //lzw20100914
+                 +'       remark="",customerno=#lskformatin.customerno,#lskformatin.price,#lskformatin.skucost,                         '+chr(13)+chr(10)
+
+                 +'       locationbillno="'+qryTmp2.fieldbyname('locationbillno').AsString+'",'+chr(13)+chr(10)
+                 +'       locname=#lskformatin.locname,locid=location.locid,              '+chr(13)+chr(10)
+                 +'       cubcage,depth=0,height=0,width=0,                    '+chr(13)+chr(10)
+
+                 +'       #lskformatin.lotcode ,#lskformatin.corpno,#lskformatin.skumodel,#lskformatin.skuspec   '+chr(13)+chr(10)
+                 +' from  #lskformatin    (nolock)                                             '+chr(13)+chr(10)
+                 +'       left join sku(nolock)                                         '+chr(13)+chr(10)
+                 +'              on sku.skuname=#lskformatin.skuname              '+chr(13)+chr(10)
+                 +'             and sku.skuspec=#lskformatin.skuspec              '+chr(13)+chr(10)
+                 +'             and sku.skumodel=#lskformatin.skumodel            '+chr(13)+chr(10)
+                 +'       left join location(nolock)                                            '+chr(13)+chr(10)
+                 +'              on location.locname=#lskformatin.locname                       '+chr(13)+chr(10)
+                 +'             and isnull(location.isdetail,"") ="T"                           '+chr(13)+chr(10)
+
+                 +' where 1=1                                               '+chr(13)+chr(10)
+                 +'declare @i smallint                                      '+chr(13)+chr(10)
+                 +' if exists(select 1 from locationinitem(nolock) where jobno="'+strlocinjobno+'")'+chr(13)+chr(10)
+                 +' begin                                                   '+chr(13)+chr(10)
+                 +'    select @i=max(isnull(sno,0))+1 from locationinitem(nolock) where jobno="'+strlocinjobno+'"'+chr(13)+chr(10)
+                 +' end else                                                '+chr(13)+chr(10)
+                 +' begin                                                   '+chr(13)+chr(10)
+                 +' select @i=0                                             '+chr(13)+chr(10)
+                 +' end                                                     '+chr(13)+chr(10)
+                 +' update #locinitemSku                                    '+chr(13)+chr(10)
+                 +'    set sno=@i,@i=@i+1                                   '+chr(13)+chr(10)
+                 );
+       
+      OpenSql(qryTmp,' select cubcage,sno from #locinitemSku  ');
+      lstcubage:=Tstringlist.create;
+      qryTmp.First;
+      while not qryTmp.Eof do
+      begin
+         breakStr(qryTmp.fieldbyname('cubcage').AsString,'X',false,false,True,lstcubage);
+         execSql(qryTmp1,' update #locinitemSku '+chr(13)+chr(10)
+                        +'    set depth='+lstcubage.strings[0]+','+chr(13)+chr(10)
+                        +'        width='+lstcubage.strings[1]+','+chr(13)+chr(10)
+                        +'        height='+lstcubage.strings[2]+chr(13)+chr(10)
+                        +'   from #locinitemSku '+chr(13)+chr(10)
+                        +'  where sno='+qryTmp.fieldbyname('sno').AsString+'');
+         qryTmp.Next;
+      end;
+   end;
+
+   qrySku.Close;
+   qrySku.Open;
+   btnOK.Enabled:=True;
+end;
+
+procedure Tfrmlocinitemsku.btnOKClick(Sender: TObject);
+var
+  strorderid,strDate,strWOJobno:string;
+begin
+  //赋业务联系单号
+   opensql(dataTmp.qryTmp,'select datenow=getDate() ');
+   strDate:=copy(dataTmp.qryTmp.FieldByName('datenow').AsString,1,4);
+   if (Kmessagedlg('是否确定导入进仓商品数据？',mtInformation,[mbYes,mbNo],0)<>mrYes) then
+      Exit;
+   _ADOConnection.Starttransaction;
+   try
+      ExecSql(qryOrder,'insert into locationinitem                                          '+chr(13)+chr(10)
+                      +'       (jobno,sno,jobnoinf,snoinf,ldsnoinf,warerentcounttype,'+chr(13)+chr(10)
+                      +'        mainorder,cusbillno,operationtype,userid,username,           '+chr(13)+chr(10)
+                      +'        pieceuom,weightuom, customerno,locid,locname,                 '+chr(13)+chr(10)
+                      +'        volumeuom,areauom,quantityuom,piecetask,grossweighttask,             '+chr(13)+chr(10)
+                      +'        netweighttask,volumetask,areatask,quantitytask,casing1task,skuid,skuname,                '+chr(13)+chr(10)
+                      +'        qualityname,shippercusid,shippercusname,                     '+chr(13)+chr(10)
+                      +'        cusid,cusname,costcusid,costcusname,skucost,price,locationbillno,      '+chr(13)+chr(10)
+                      +'        depth,height,width ,lotcode ,corpno,skumodel,skuspec,iuserid,iusername,serialno  )  '+chr(13)+chr(10)
+                      +' select jobno=#locinitemSku.jobno,sno=#locinitemSku.sno,'+chr(13)+chr(10)
+                      +'        jobnoinf=#locinitemSku.jobno,snoinf=#locinitemSku.sno,-1,"IR", '+chr(13)+chr(10)
+                      +'        mainorder,cusbillno,operationtype=1,              '+chr(13)+chr(10)
+                      +'        userid,username,pieceuom,weightuom,customerno, locid,locname, '+chr(13)+chr(10)
+                      +'        volumeuom,areauom,quantityuom,piece,grossweight,             '+chr(13)+chr(10)
+                      +'        netweight,volume,area,quantity,casing1,skuid,skuname,                '+chr(13)+chr(10)
+                      +'        "正品",shippercusid,               '+chr(13)+chr(10)
+                      +'        shippercusname,              '+chr(13)+chr(10)
+                      +'        cusid,cusname,     '+chr(13)+chr(10)
+                      +'        costcusid,costcusname,skucost,price,locationbillno,      '+chr(13)+chr(10)
+                      +'        depth,height,width,lotcode ,corpno,skumodel,skuspec,     '+chr(13)+chr(10)
+                      +'        iuserid,iusername,serialno   '+chr(13)+chr(10)
+                      +'  from  #locinitemSku                                            '+chr(13)+chr(10)
+                      +'  where isnull(skuid,"")<>""'
+                      );
+      ExecSql(qryTmp,' update locationin set cusid=locationinitem.cusid,    '+chr(13)+chr(10)
+                    +'        cusname=locationinitem.cusname,    '+chr(13)+chr(10)
+                    +'        shippercusid=locationinitem.shippercusid,    '+chr(13)+chr(10)
+                    +'        shippercusname=locationinitem.shippercusname    '+chr(13)+chr(10)
+                    +'  from  locationinitem                                  '+chr(13)+chr(10)
+                    +'  where locationin.jobno="'+strlocinjobno+'"     '+chr(13)+chr(10)
+                    +'    and locationinitem.jobno=locationin.jobno    '+chr(13)+chr(10)
+                    );
+
+      KMessageDlg('导入任务商品资料完成!',mtInformation,[mbOK],0);
+      droplsk('#locinitemSku');
+      droplsk('#lskformatin');
+
+      _ADOConnection.Commit;
+   except
+      if _ADOConnection.InTransaction then
+         _ADOConnection.Rollback;
+      raise;
+      exit;
+   end;
+   frmlocinitemsku.Close;
+   qrysku.Close;
+end;
+
+procedure Tfrmlocinitemsku.edtPathButtonClick(Sender: TObject;
+  AbsoluteIndex: Integer);
+begin
+   if OpenDialog1.Execute then
+      edtPath.Text:=OpenDialog1.FileName;
+end;
+
+procedure Tfrmlocinitemsku.mitDelOrderClick(Sender: TObject);
+var
+   i:Integer;
+begin
+   if KmessageDlg('你确定删除该数据?',mtConfirmation,[mbYes,mbNo],0)=mrNo then
+      Exit;
+   for i:=grdsku.SelectedCount-1 Downto 0 do
+   begin
+      _ADOConnection .Starttransaction;
+      try
+        ExecSql(qryTmp,'delete from #locinitemSku '
+                      +'  where jobno="'+qrysku.FieldByName('jobno').AsString+'" ');
+        TdxDBGridNode(grdsku.FocusedNode).Delete;
+        qrySku.ApplyUpdates;
+        _ADOConnection.Commit;
+      except
+        if _ADOConnection.InTransaction then
+           _ADOConnection.Rollback;
+        raise;
+        Exit;
+      end;
+      qrySku.CommitUpdates;
+   end;
+end;
+
+end.
+
